@@ -96,6 +96,34 @@ Node *insert(Node *root, int key) {
     return maintain(root);
 }
 
+Node *predecessor(Node *root) {
+    Node *temp = root->lchild;
+    while (temp->rchild != NIL) { //必须写成！=形式，由于NIL的使用，直接判真会无限循环
+        temp = temp->rchild;
+    }
+    return temp;
+}
+
+Node *erase(Node *root, int key) {
+    if (root == NIL) return root;
+    if (key < root->key) {
+        root->lchild = erase(root->lchild, key);
+    }
+    else if (key > root->key) root->rchild = erase(root->rchild, key);
+    else {
+        if (root->lchild == NIL || root->rchild == NIL) { //度为1和度为0的情况实际兼容
+            Node *temp = root->lchild != NIL ? root->lchild : root->rchild; //找到唯一子孩子
+            free(root);
+            return temp; // 当度为0时，temp = rchild = NIL，等价于删除后返回空节点
+        } else {
+            Node *temp = predecessor(root);
+            root->key = temp->key;
+            root->lchild = erase(root->lchild, temp->key);
+        }
+    }
+    update_height(root);
+    return maintain(root);
+}
 
 void clear(Node *root) {
     if (root == NIL) return ;
@@ -104,6 +132,16 @@ void clear(Node *root) {
     free(root);
     return ;
 }
+
+Node *find(Node *root, int key) {
+    if (root == NIL) return NIL;
+    if (root->key == key) return root;
+    if (key < root->key) return find(root->lchild, key);
+    else return find(root->rchild, key);
+}
+
+
+
 
 void output(Node *root) {
     if (root == NIL) return ;
@@ -121,11 +159,24 @@ int main() {
     srand(time(0));
     Node *root = NIL;
     int x;
+    //insert test
     while (cin >> x) {
         if (x == -1) break;
         cout << "insert " << x << " to AVL Tree" << endl;
         root = insert(root, x);
         output(root);
+    }
+    //erase test
+    while (cin >> x) {
+        if (x == -1) break;
+        cout << "erase " << x << " from AVL Tree" << endl;
+        root = erase(root, x);
+        output(root);
+    }
+    //find test
+    while (cin >> x) {
+        if (x == -1) break;
+        cout << "find " << x << " in AVL Tree : " << (find(root, x) != NIL) << endl;
     }
     return 0;
 }
